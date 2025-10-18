@@ -9,7 +9,7 @@ format:
 
 ## Based on
 
-https://thetidytrekker.com/post/thinking-outside-the-grid/thinking-outside-the-grid.html
+Modified on https://thetidytrekker.com/post/thinking-outside-the-grid/thinking-outside-the-grid.html
 
 ## Load Packages
 
@@ -19,6 +19,9 @@ library(tidyverse)
 library(RColorBrewer)
 library(cowplot)
 library(patchwork)
+library(png)
+
+library(here)
 ```
 
 
@@ -186,7 +189,7 @@ planet_flat <- planet |>
     y = y
     )) +
   scale_fill_manual(
-    values = sample(planet_colours, 100, replace = TRUE)
+    values = sample(planet_colours, 200, replace = TRUE)
     ) +
   geom_density2d_filled(
     color = "brown4",
@@ -204,5 +207,65 @@ planet_polar <- planet_flat +
   coord_polar()
 
 planet_polar
+```
+
+## Create some stars
+
+```{r}
+stars <- tibble(crossing(
+  x = seq(1,2000,100),
+  y = seq(1,2000,100)
+  ))
+```
+
+```{r}
+stars_plot <- stars |> 
+  ggplot(aes(
+    x = x,
+    y = y
+    )) +
+  geom_jitter(
+    size = sample(
+      c(.02,.04,.06,.8),
+      nrow(stars),
+      replace = TRUE
+      ),
+    color = "white"
+    ) +
+  theme_void() +
+  theme(
+    plot.background = element_rect(
+      fill = "#000000",
+      color = "#ffffff",
+      linewidth = 6
+      )
+    )
+
+stars_plot
+```
+
+## Save Planet into directory
+
+```{r}
+ggsave(
+  here("planet.png"),
+  planet_polar,
+  bg = "transparent", 
+  device = "png"
+  )
+```
+
+## Read *planet.png* into R
+
+```{r}
+planet_png <- readPNG(here("planet.png"))
+```
+
+## Combine `stars` and `planet`
+
+```{r}
+stars_plot |> 
+  ggdraw() +
+  draw_image(planet_png)
 ```
 
