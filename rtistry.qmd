@@ -1,0 +1,208 @@
+---
+title: "rtistry"
+author: "Johann Wagner"
+date: "2025-10-18"
+format:
+  html:
+    self-contained: true
+---
+
+## Based on
+
+https://thetidytrekker.com/post/thinking-outside-the-grid/thinking-outside-the-grid.html
+
+## Load Packages
+
+```{r}
+#| output:  false
+library(tidyverse)
+library(RColorBrewer)
+library(cowplot)
+library(patchwork)
+```
+
+
+## A Single Point
+
+```{r}
+single_point <- tibble(x = 0, y = 0)
+
+single_point |> 
+  ggplot(aes(
+    x = x,
+    y = y
+    ))+
+  geom_point() +
+  theme_void()
+```
+
+## Random Lines
+
+```{r}
+number_of_lines <- 300
+
+random_lines <- tibble(
+  # Get 50 numbers between 1 and 50 without replacement
+  x = sample(1:number_of_lines, number_of_lines),
+  y = 1:number_of_lines
+  )
+
+random_lines |> 
+  ggplot(aes(
+    x = x,
+    y = y,
+    xend = median(x),
+    yend = median(y)
+  )) +
+  geom_segment() +
+  theme_void()
+```
+
+## Square?
+
+```{r}
+square <- tibble(
+  x = c(0, number_of_lines, number_of_lines, 0),
+  y = c(0, 0, number_of_lines, number_of_lines)
+  )
+
+square |> 
+  ggplot(aes(
+    x = x,
+    y = y
+    )) +
+  geom_polygon(
+    fill = NA,
+    colour = "black"
+  ) +
+  coord_equal() +
+  theme_void()
+```
+
+## Combine square + random lines
+
+```{r}
+square |> 
+  ggplot(aes(
+    x = x,
+    y = y
+    )) +
+  geom_polygon(
+    fill = NA,
+    colour = "black"
+  ) +
+  geom_segment(
+    data = random_lines,
+    aes(
+      x = x,
+      y = y,
+      xend = number_of_lines/2,
+      yend = number_of_lines/2
+    )
+  ) +
+  coord_equal() +
+  theme_void()
+```
+
+## Without the `xend` argument
+
+```{r}
+square |> 
+  ggplot(aes(
+    x = x,
+    y = y
+    )) +
+  geom_polygon(
+    fill = NA,
+    colour = "black"
+  ) +
+  geom_segment(
+    data = random_lines,
+    aes(
+      x = x,
+      y = y,
+      xend = , #lol
+      yend = 25
+    )
+  ) +
+  coord_equal() +
+  theme_void()
+```
+
+## Add random colour
+
+```{r}
+random_lines_cartesian <- random_lines |> 
+  ggplot(aes(
+    x = x,
+    y = y,
+    xend = number_of_lines/2,
+    yend = number_of_lines/2
+    )) +
+  geom_segment(
+    linewidth = 1,
+    colour = sample(
+      brewer.pal(5,"Purples"), nrow(random_lines), replace = TRUE
+      )
+    ) +
+  theme_void()
+
+random_lines_cartesian
+```
+
+```{r}
+random_lines_cartesian +
+  coord_radial()
+```
+
+## Density Plots
+
+```{r}
+planet <- tibble(crossing(
+  x = sample(1:1000, 100, replace = TRUE),
+  y = sample(1:2000, 100, replace = TRUE)
+))
+
+planet
+```
+
+```{r}
+planet |>
+  ggplot(aes(
+    x = x,
+    y = y
+    )) +
+  geom_point()
+```
+
+
+```{r}
+#planet_colours <- c("#194157","#008dd7","#085b88","#26925e","#095c88")
+planet_colours <- RColorBrewer::brewer.pal(5, "YlGnBu")
+
+planet_flat <- planet |>
+  ggplot(aes(
+    x = x,
+    y = y
+    )) +
+  scale_fill_manual(
+    values = sample(planet_colours, 100, replace = TRUE)
+    ) +
+  geom_density2d_filled(
+    color = "brown4",
+    linewidth = 1.1
+    ) +
+  theme_void() +
+  theme(legend.position = "none")
+
+planet_flat
+```
+
+
+```{r}
+planet_polar <- planet_flat +
+  coord_polar()
+
+planet_polar
+```
+
